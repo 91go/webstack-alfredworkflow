@@ -1,0 +1,381 @@
+# title of website
+title: webstack
+
+# description of website
+description: hapihacking's navigation site
+
+# favicon of website
+favicon: "https://webstack.cc/assets/images/favicon.png"
+
+# your website url
+url: https://ws.wrss.top
+
+# github profile url
+github: "https://github.com/toolsz/webstack"
+
+# footer message
+footer: © 2021-2021 @hapihacking
+
+# template(theme) of your site, available:
+# 1. webstack (http://webstack.cc)
+template: webstack
+
+# Google Analytics
+# google_analytics: "G-EXE1PJ8CR2"
+
+content:
+  categories:
+    - name: 常用网站
+      sites:
+        - name: 阿里云盘
+          url: https://www.aliyundrive.com/drive
+        - name: 阿里云
+          url: https://home.console.aliyun.com/home/dashboard/ProductAndService
+        - name: Youtube Music
+          url: https://music.youtube.com/library/albums
+        - name: Google翻译
+          url: https://translate.google.cn/?sl=auto&tl=en&op=translate
+        - name: 微软邮箱Outlook
+          url: https://outlook.live.com/
+        - name: Notion
+          url: https://www.notion.so/
+        - name: 高驰Training Hub
+          url: https://t.coros.com/admin/views/dash-board
+        - name: The Weather Channel
+          description: 比墨迹天气好用
+          url: https://weather.com/zh-CN/weather/hourbyhour/l/7f14186934f484d567841e8646abc61b81cce4d88470d519beeb5e115c9b425a
+        - name: Weather Spark
+          description: 全年气候和平均天气
+          url: https://zh.weatherspark.com/y/137446/%E4%B8%AD%E5%9B%BD%E3%80%81%E4%B8%8A%E6%B5%B7%E5%B8%82%E7%9A%84%E5%85%A8%E5%B9%B4%E5%B9%B3%E5%9D%87%E5%A4%A9%E6%B0%94
+        - name: Excalidraw
+          url: https://excalidraw.com/
+    - name: 开发工具
+      sites:
+        - name: Repl.it
+          description: 在线使用的通用IDE，支持所有主流语言（完美替代其他在线IDE），集合了goplay.tools、3v4l.org、Colab好用
+          url: https://replit.com/
+          icon: https://replit.com/public/icons/favicon-prompt-192.png
+        - name: Compiler Explorer
+          description: 在线C++编译器能够查看c++/rust/golang编译过程的在线编译器
+          url: https://godbolt.org/
+        - name: AST explorer
+          description: 一款用于探索各种代码解析器生成的抽象语法树 (Abstract Syntax Tree, AST) 的在线工具
+          url: https://astexplorer.net/
+        - name: Staticfile CDN
+          description: 收录知名开源js、css等静态资源的网站
+          url: https://www.staticfile.org/
+        - name: Program Creek
+          description: 一些lib的使用例子，但是只支持java/python/c++/scala，不知道某个lib的用法时，可以先在这个网站查查
+          url: https://www.programcreek.com/
+        - name: 阿里云镜像源
+          url: https://developer.aliyun.com/mirror/
+        - name: 中科大镜像源
+          url: https://mirrors.ustc.edu.cn/
+        - name: 数据结构模拟 Data Structure Visualizations
+          description: 各种数据结构的动画
+          url: https://www.cs.usfca.edu/~galles/visualization/Algorithms.html
+        - name: httpbin
+          description: 用来通过查看url请求是否符合预期，来看代码是否有问题，或者当前网络环境（比如容器内）是否有问题
+          url: http://httpbin.org/
+        - name: Crontab.guru
+          url: https://crontab.guru/
+        - name: paperswithcode
+          description: 论文+代码（ML相关）
+          url: https://paperswithcode.com/
+        - name: CodeCov
+          url: https://about.codecov.io/
+        - name: Go Report Card
+          url: https://goreportcard.com/
+        - name: Coveralls
+          url: https://coveralls.io/
+        - name: Explainshell
+          url: https://explainshell.com/
+    - name: gh
+      sites:
+        - name: deps.dev
+          description: 用来查看开源项目的依赖是否有漏洞
+          url: https://deps.dev/
+        - name: Github OSS Insight
+          description: 查看gh某个repo的star（`starchart.cc`）/PR/issue等等数据，以及比较repo（类似`Github Compare`）
+          url: https://ossinsight.io/
+        - name: OSSRank
+          url: https://ossrank.com/
+        - name: Github active-forks
+          description: 查找repo最活跃的fork
+          url: https://techgaun.github.io/active-forks/index.html
+        - name: Useful Forks
+          description: 一款分析repo forks的工具，它会自动过滤掉没有新的提交的forks，只留下有用的forks
+          url: https://useful-forks.github.io/
+        - name: readme.so
+          description: 辅助写README的工具，还不错
+          url: https://readme.so/editor
+          icon: https://readme.so/favicon.ico
+        - name: OpenSource Builders
+          description: 一些服务的开源替代品，还不错
+          url: https://opensource.builders/
+    - name: 网站网页
+      sites:
+        - name: Web-Vitals
+          description: 批量检查网页加载速度的工具，一次最多可以检查 500 个页面（比`Pagespeed Insights`好用）
+          url: https://www.experte.com/web-vitals
+          icon: https://www.experte.com/assets/favicons/www.experte.com/apple-touch-icon.png
+        - name: resource-hint-validator
+          description: 一款检查preload, prefetch, preconnect等Resource Hints使用是否恰当的工具
+          url: https://www.debugbear.com/resource-hint-validator
+        - name: Website Metadata
+          description: 查看网页meta标签信息的工具。输入网址，就可以看到在各个搜索引擎和社交媒体平台上面显示的效果。还可以在线编辑生成meta标签。
+          url: https://websitemetadata.com/
+          icon: https://websitemetadata.com/images/favicon.png
+        - name: itdog
+          url: https://www.itdog.cn/
+        - name: 网易DNS检测工具
+          url: http://nstool.netease.com/
+        - name: misaka ping
+          url: https://ping.sx/ping
+          icon: https://ping.sx/favicon.ico
+        - name: DNSdumpster
+          description: 查看某个域名下的所有二级域名
+          url: https://dnsdumpster.com/
+    - name: 开发文档
+      sites:
+        - name: Quick Reference
+          url: https://quickref.pipecraft.net/
+        - name: AWESOME-LIST
+          url: https://asmcn.icopy.site/awesome/awesome-zsh-plugins/
+        - name: alpine-packages
+          url: https://pkgs.alpinelinux.org/packages
+        - name: pre-commit的hooks和文档
+          description: 提供的所有hooks，也可以看看文档
+          url: https://pre-commit.com/hooks.html
+        - name: LeetCode
+          url: https://leetcode-cn.com/
+        - name: CodeTop企业题库
+          url: https://codetop.cc/home
+    - name: golang文档
+      sites:
+        - name: golang标准库
+          url: https://pkg.go.dev/std
+        - name: gf文档
+          url: https://pkg.go.dev/github.com/gogf/gf/v2
+        - name: go-zero文档
+          url: https://go-zero.dev/cn/docs/introduction/
+        - name: Goland文档
+          description: IDE相关问题别再乱查各种帖子了，直接看文档最好
+          url: https://www.jetbrains.com/help/go/meet-the-product.html
+        - name: GORM文档
+          url: https://gorm.io/zh_CN/docs/index.html
+        - name: casbin文档
+          url: https://casbin.org/docs/zh-CN/overview
+    - name: 前端文档
+      sites:
+        - name: UmiJS文档
+          url: https://umijs.org/zh-CN/docs/load-on-demand
+        - name: Element文档
+          description: ⚠️注意版本
+          url: https://element.faas.ele.me/2.14/#/zh-CN/component/layout
+        - name: Element Plus文档
+          url: https://element-plus.gitee.io/zh-CN/component/button.html
+    - name: 微服务文档
+      sites:
+        - name: k8s文档
+          url: https://kubernetes.io/zh/docs/reference/
+        - name: kubesphere
+          url: https://kubesphere.io/zh/
+        - name: Artifact Hub
+          url: https://artifacthub.io/packages/search?sort=relevance&page=1
+        - name: Helm
+          url: https://helm.sh/zh/docs/intro/quickstart/
+        - name: 云原生资料库
+          description: k8s/Istio/Envoy教程
+          url: https://lib.jimmysong.io/kubernetes-handbook/
+        - name: Docker文档
+          description: 文档写的特别好，三个部分：docker命令/Dockerfile/docker-compose
+          url: https://docs.docker.com/engine/reference/run/
+        - name: Prometheus文档
+          url: https://prometheus.io/docs/prometheus/latest/getting_started/
+    - name: 运维文档
+      sites:
+        - name: Redis命令/文档
+          description: 主要用来查命令（当然，还有文档）
+          url: https://redis.io/commands/
+        - name: Gitea文档
+          url: https://docs.gitea.io/zh-cn/
+        - name: Ansible文档
+          description: 找了几个中文版文档，版本都很老（将就看英文版吧）
+          url: https://docs.ansible.com/ansible/latest/index.html
+        - name: Ansible Galaxy
+          url: https://galaxy.ansible.com/home
+        - name: gh-actions集合
+          url: https://github.com/marketplace?type=actions
+        - name: gh-actions官方文档
+          url: https://docs.github.com/cn/actions/quickstart
+        - name: gitlab官方文档
+          url: https://docs.gitlab.com/ee/
+    - name: 云服务文档
+      sites:
+        - name: apifox
+          description: apifox提供的api开放平台，提供了基本上所有主流服务的文档和调试，用起来很方便
+          url: https://www.apifox.cn/apihub/
+        - name: 云片
+          url: https://www.yunpian.com/
+        - name: 聚合数据
+          description: 比nowapi好用
+          url: https://www.juhe.cn/
+        - name: 百度智能云
+          description: 百度智能云，用过车牌识别之类的服务
+          url: https://cloud.baidu.com/
+        - name: 高德开放平台
+          url: https://lbs.amap.com/
+        - name: 超级鹰
+          description: 打码平台，还不错
+          url: https://www.chaojiying.com/
+        - name: 腾讯防水墙
+          description: 验证码/内容平台防垃圾内容等服务
+          url: https://007.qq.com/
+        - name: 芝麻HTTP
+          descriptin: 比较好用的代理IP网站，但是不便宜，用过几次还可以
+          url: https://h.zhimaruanjian.com/
+          icon: https://static.http.linkudp.com/static/index/src/img/favicon.png
+    - name: web3
+      sites:
+        - name: Seed Club
+          url: https://www.seedclub.xyz/
+        - name: Mirror
+          url: https://mirror.xyz/
+        - name: UNISWAP
+          url: https://uniswap.org/
+        - name: FWB
+          url: https://www.fwb.help/
+        - name: Bankless DAO
+          url: https://www.bankless.community/
+        - name: DAOrayaki
+          url: https://media.daorayaki.org/
+        - name: cryptofonts
+          description: 加密货币的icon
+          url: https://cryptofonts.com/icons.php
+        - name: ViaWallet
+          url: https://explorer.viawallet.com/btc
+    - name: 日常生活
+      sites:
+        - name: 油猴脚本Greasy Fork
+          url: https://greasyfork.org/zh-CN
+        - name: WidgetStore/组件世界
+          description: 丰富的嵌入式小组件库、动态图标库、可视化图表库
+          url: https://cn.widgetstore.net/#/home
+        - name: Table Convert
+          url: https://tableconvert.com/
+          icon: https://tableconvert.com/images/favicon.png
+        - name: Graph Maker
+          description: 对比ChartCube使用
+          icon: https://linegraphmaker.co/icon.ico
+          url: https://linegraphmaker.co/bar-graph
+        - name: ChartCube
+          description: 相当于可以在线使用的echarts，可以导出饼图柱状图折线图等，但仅支持导入csv/excel/json数据
+          url: https://chartcube.alipay.com/upload
+        - name: EasyIcon
+          description: 比FlatIcon、IconFont好用
+          url: http://www.easyicon.cc/
+        - name: Investment Calculator
+          description: 计算投资收益什么的，好用
+          url: https://www.calculator.net/investment-calculator.html
+
+    - name: 文档工具
+      sites:
+        - name: Koodo Reader
+          description: 比neat-reader好用
+          url: https://reader.960960.xyz/
+        - name: 写作猫
+          url: https://xiezuocat.com/#/
+        - name: 冷熊简历
+          description: 木及简历
+          url: https://cv.ftqq.com/#
+          icon: https://fox.ftqq.com/bearcv/favicon.png
+        - name: 在线markdown编辑器
+          description: 比StackEdit好用很多，用来辅助处理一些md格式问题
+          url: https://md.mzr.me/
+    - name: 在线工具
+      sites:
+        - name: 隔离食用手册
+          url: https://cook.yunyoujun.cn/
+        - name: 白描OCR
+          description: 白描OCR的在线服务
+          url: https://web.baimiaoapp.com/
+        - name: Temp Mail - 临时性匿名邮箱
+          url: https://temp-mail.org/zh
+        - name: 云短信 - 临时性匿名短信
+          description: 在线短信接收平台，用来注册临时使用(只使用一次)的网站
+          url: https://yunduanxin.net/
+        - name: SPEEDTEST中国科学技术大学测速网站
+          description: SPEEDTEST
+          url: https://test.ustc.edu.cn/
+    - name: 随便看看
+      sites:
+        - name: 5000yan
+          url: https://5000yan.com/fenlei/zhuzi/
+          description: 老子、韩非子、荀子（以及庄子孟子论语墨子孙子）
+        - name: 中国裁判文书网
+          description: 做任何新项目之前，都去搜一搜，了解底线在哪，雷区在哪，该碰什么不碰什么。闲着没事也可以翻翻看（文字版1818）。
+          url: https://wenshu.court.gov.cn/
+        - name: IT桔子
+          url: https://www.itjuzi.com/deathCompany
+        - name: Wiki How
+          url: https://zh.wikihow.com/%E9%A6%96%E9%A1%B5
+        - name: 硬创社
+          url: https://x.jlc.com/platform/community
+        - name: 烯牛数据
+          description: 免费的投创数据平台，其他类似的都要收费
+          url: https://www.xiniudata.com/
+          icon: https://www.xiniudata.com/static/image/icons/xiniu-icon-apple-touch.png
+        - name: Kaggle
+          description: 数据挖掘的比赛网站
+          url: https://www.kaggle.com/
+        - name: JoinQuant聚宽量化交易平台
+          description: 相当于国内的Kaggle，没事下载几个策略跑跑
+          url: https://www.joinquant.com/
+        - name: 七麦数据
+          url: https://www.qimai.cn/
+        - name: xclient
+          description: mac的破解软件
+          url: https://xclient.info/
+        - name: Packal
+          url: http://www.packal.org/
+        - name: Alfred workflows
+          url: https://www.alfredapp.com/workflows/
+        - name: Alfred Forum
+          url: https://www.alfredforum.com/
+        - name: 国标/行标
+          description: 查看全文，自带搜索功能，输入关键字或者国标编号即可
+          url: http://openstd.samr.gov.cn/bzgk/gb/std_list
+    - name: 娱乐
+      sites:
+        - name: COKEMV
+          url: https://cokemv.me/
+        - name: vim游戏（VIM Adventures）
+          description: Learn VIM while playing a game
+          url: https://vim-adventures.com/
+        - name: tg
+          url: https://web.telegram.im/
+        - name: pixivFANBOX
+          url: https://www.fanbox.cc/
+        - name: 中文播客榜
+          url: https://xyzrank.com/
+    - name: 购物
+      sites:
+        - name: 黑猫投诉
+          url: https://tousu.sina.com.cn/
+        - name: ProductZ
+          url: https://productz.com/en
+        - name: REI
+          url: https://www.rei.com/
+        - name: 充电头网手机充电兼容性测试数据库
+          url: https://shimo.im/sheets/aBAYV0nY69S90V3j
+        - name: PACK HACKER
+          url: https://packhacker.com/
+        - name: IKEA
+          url: https://www.ikea.cn/cn/zh/cat/chu-wu-he-shou-na-st001/
+        - name: MUJI
+          url: https://www.muji.com.cn/cn/store/
+        - name: 始祖鸟
+          url: https://arcteryx.com/ca/zh/c/mens
+        - name: 始祖鸟leaf
+          url: https://leaf.arcteryx.com/ca/en/c/combat-uniforms
