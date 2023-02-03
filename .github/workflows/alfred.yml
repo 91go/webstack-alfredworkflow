@@ -7,16 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go: [ '1.19' ]
+#        go: [ '1.19' ]
+        os: [macos-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: {{ matrix.go }}
+          go-version: 'stable'
       - name: Build wsaw
         run: go build -o wsaw
       - name: Build Alfred workflow
