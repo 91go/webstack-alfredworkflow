@@ -7,13 +7,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        go-version: [ 1.19 ]
+        os: [ macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: {{ matrix.go-version }}
       - uses: actions/checkout@v3
       - name: Build wsaw
         run: go build -o wsaw
@@ -22,7 +25,7 @@ jobs:
         uses: almibarss/build-alfred-workflow@v1
         with:
           workflow_dir: .
-          exclude_patterns: '!*.alfredworkflow !wsaw'
+          exclude_patterns: '.git .github .gitignore go.mod go.sum main.go README.md' # 无法反选，只能列举除了wsaw和alfredworkflow以外的所有文件
 
       - name: Release
         uses: softprops/action-gh-release@v1
