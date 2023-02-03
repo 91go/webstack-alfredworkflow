@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
+	"log"
 	"os"
 	"strings"
+
+	aw "github.com/deanishe/awgo"
 
 	"github.com/spf13/viper"
 )
@@ -36,36 +35,37 @@ type Sites []struct {
 	Icon        string `yaml:"icon,omitempty"`
 }
 
-// 用于翻译结果的图标显示
-type icon struct {
-	Type string `json:"type"`
-	Path string `json:"path"`
+// Workflow is the main API
+var wf *aw.Workflow
+
+func init() {
+	wf = aw.New()
 }
 
-// 用于单条结果
-type Item struct {
-	Subtitle     string `json:"subtitle"` // 固定的小字的标题
-	Title        string `json:"title"`
-	Arg          string `json:"arg"`
-	Icon         icon   `json:"icon"`
-	Valid        bool   `json:"valid"`
-	Autocomplete string `json:"autocomplete"`
-}
-
-// 结果集
-type Items struct {
-	Items []Item `json:"items"`
+func main() {
+	wf.Run(run)
 }
 
 // kw <directory-name>
 // kw <url-name>... 直接展示所有标题/及url有该字符的，不管分类，默认忽略大小写
-func main() {
+func run() {
 	// TODO 从alfred的配置文件中读取webstack的config.yml的url
-
-	if len(os.Args) > 3 {
-		os.Exit(1)
+	var err error
+	args := wf.Args()
+	log.Println("args: ", args, len(args))
+	log.Println("os.Args: ", os.Args, len(os.Args))
+	if len(args) == 0 || len(args) > 2 {
+		return
 	}
-	fi := os.Args[1]
+	defer func() {
+		if err == nil {
+			wf.SendFeedback()
+			return
+		}
+	}()
+
+	fi := args[0]
+	log.Println("fi: ", fi)
 
 	cate := getCategoriesFromConfig()
 	allSites := extractAllSitesFromCategories(cate)
@@ -73,8 +73,9 @@ func main() {
 	names := matchFiAndCategoryNames(fi, cateNames)
 	var res Sites
 
-	if len(os.Args) == 3 {
-		se := os.Args[2]
+	if len(args) == 2 {
+		se := args[1]
+		log.Println("se: ", se)
 		res = matchSeAndSites(fi, se, cate)
 	} else {
 		// 如果names不为空，则说明匹配到了分类
@@ -85,11 +86,8 @@ func main() {
 			res = matchFiAndSites(fi, allSites)
 		}
 	}
-
-	items := generateItemsFromSites(res)
-	itemsToJSON := ItemsToJSON(items)
-
-	fmt.Println(itemsToJSON)
+	generateItemsFromSites(res)
+	wf.SendFeedback()
 }
 
 // 用viper从config.yml中读取key为categories的数据
@@ -183,56 +181,34 @@ func matchSeAndSites(fi, se string, categories Categories) Sites {
 }
 
 // 根据sitesFromCategory生成items，Site和Item相对应，其中Item的Arg为Site的URL，Title为Site的Name，Subtitle为Site的Description
-func generateItemsFromSites(Sites Sites) (items []Item) {
+func generateItemsFromSites(Sites Sites) (items []aw.Item) {
 	for _, s := range Sites {
-		item := Item{
-			Arg:          s.URL,
-			Title:        s.Name,
-			Subtitle:     s.Description,
-			Icon:         getIconFromURL(s.URL, s.Icon),
-			Valid:        true,
-			Autocomplete: s.Name,
-		}
-		items = append(items, item)
+		wf.NewItem(s.Name).Arg(s.URL).Subtitle(s.Description).
+			Valid(true).Autocomplete(s.Name)
 	}
 	return
 }
 
-// 将[]Items转为json格式
-func ItemsToJSON(items []Item) string {
-	bytes, err := json.Marshal(items)
-	if err != nil {
-		panic(err)
-	}
-	return string(bytes)
-}
-
 // 从url中提取domain
-func extractDomainFromURL(siteURL string) string {
-	u, err := url.Parse(siteURL)
-	if err != nil {
-		panic(err)
-	}
-	return u.Host
-}
+// func extractDomainFromURL(siteURL string) string {
+// 	u, err := url.Parse(siteURL)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return u.Host
+// }
 
 // 从url中提取domain，判断该网站根目录是否有favicon.ico，如果有则返回favicon.ico的url，如果没有则返回customIcon，作为icon的path
 // icon的type为fileicon
-func getIconFromURL(url, customIcon string) icon {
-	domain := extractDomainFromURL(url)
-	iconURL := fmt.Sprintf("http://%s/favicon.ico", domain)
-	resp, err := http.Get(iconURL)
-	if err != nil {
-		panic(err)
-	}
-	if resp.StatusCode == 200 {
-		return icon{
-			Path: iconURL,
-			Type: "fileicon",
-		}
-	}
-	return icon{
-		Path: customIcon,
-		Type: "fileicon",
-	}
-}
+// func getIconFromURL(url, customIcon string) string {
+// 	domain := extractDomainFromURL(url)
+// 	iconURL := fmt.Sprintf("http://%s/favicon.ico", domain)
+// 	resp, err := http.Get(iconURL)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	if resp.StatusCode == 200 {
+// 		return iconURL
+// 	}
+// 	return customIcon
+// }
