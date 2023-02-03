@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type Webstack struct {
@@ -64,12 +67,11 @@ func main() {
 	}
 	fi := os.Args[1]
 
-	// TODO 相比于alfred的书签管理，提供icon
 	cate := getCategoriesFromConfig()
 	allSites := extractAllSitesFromCategories(cate)
 	cateNames := extractNameFromCategories(cate)
 	names := matchFiAndCategoryNames(fi, cateNames)
-	res := Sites{}
+	var res Sites
 
 	if len(os.Args) == 3 {
 		se := os.Args[2]
@@ -86,15 +88,6 @@ func main() {
 
 	items := generateItemsFromSites(res)
 	itemsToJSON := ItemsToJSON(items)
-	// 格式化打印json
-	// var prettyJSON bytes.Buffer
-	// error := json.Indent(&prettyJSON, []byte(itemsToJSON), "", "\t")
-	// if error != nil {
-	// 	log.Println("JSON parse error: ", error)
-	// 	return
-	// }
-	//
-	// log.Println("CSP Violation:", string(prettyJSON.Bytes()))
 
 	fmt.Println(itemsToJSON)
 }
@@ -193,10 +186,10 @@ func matchSeAndSites(fi, se string, categories Categories) Sites {
 func generateItemsFromSites(Sites Sites) (items []Item) {
 	for _, s := range Sites {
 		item := Item{
-			Arg:      s.URL,
-			Title:    s.Name,
-			Subtitle: s.Description,
-			// TODO Icon:       s.Icon,
+			Arg:          s.URL,
+			Title:        s.Name,
+			Subtitle:     s.Description,
+			Icon:         getIconFromURL(s.URL, s.Icon),
 			Valid:        true,
 			Autocomplete: s.Name,
 		}
@@ -212,4 +205,34 @@ func ItemsToJSON(items []Item) string {
 		panic(err)
 	}
 	return string(bytes)
+}
+
+// 从url中提取domain
+func extractDomainFromURL(siteURL string) string {
+	u, err := url.Parse(siteURL)
+	if err != nil {
+		panic(err)
+	}
+	return u.Host
+}
+
+// 从url中提取domain，判断该网站根目录是否有favicon.ico，如果有则返回favicon.ico的url，如果没有则返回customIcon，作为icon的path
+// icon的type为fileicon
+func getIconFromURL(url, customIcon string) icon {
+	domain := extractDomainFromURL(url)
+	iconURL := fmt.Sprintf("http://%s/favicon.ico", domain)
+	resp, err := http.Get(iconURL)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode == 200 {
+		return icon{
+			Path: iconURL,
+			Type: "fileicon",
+		}
+	}
+	return icon{
+		Path: customIcon,
+		Type: "fileicon",
+	}
 }
