@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
-	"os"
+	"net/http"
 	"strings"
+	"time"
 
 	aw "github.com/deanishe/awgo"
-
-	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type Webstack struct {
@@ -49,11 +49,10 @@ func main() {
 // kw <directory-name>
 // kw <url-name>... 直接展示所有标题/及url有该字符的，不管分类，默认忽略大小写
 func run() {
-	// TODO 从alfred的配置文件中读取webstack的config.yml的url
 	var err error
 	args := wf.Args()
-	log.Println("args: ", args, len(args))
-	log.Println("os.Args: ", os.Args, len(os.Args))
+	// log.Println("args: ", args, len(args))
+	// log.Println("os.Args: ", os.Args, len(os.Args))
 	if len(args) == 0 || len(args) > 2 {
 		return
 	}
@@ -65,9 +64,15 @@ func run() {
 	}()
 
 	fi := args[0]
-	log.Println("fi: ", fi)
+	// log.Println("fi: ", fi)
 
-	cate := getCategoriesFromConfig()
+	wsURL, b := wf.Alfred.Env.Lookup("ws_url")
+	if !b {
+		return
+	}
+
+	// cate := getCategoriesFromConfig()
+	cate := getCategoriesFromCacheOrConfig(wsURL)
 	allSites := extractAllSitesFromCategories(cate)
 	cateNames := extractNameFromCategories(cate)
 	names := matchFiAndCategoryNames(fi, cateNames)
@@ -95,16 +100,45 @@ func run() {
 // map中的key是name，value是sites
 // sites是一个数组，数组中的每个元素是一个map
 // map中的key是name，description，url，icon
-func getCategoriesFromConfig() Categories {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yml")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
+// func getCategoriesFromConfig() Categories {
+// 	viper.SetConfigName("config")
+// 	viper.SetConfigType("yml")
+// 	viper.AddConfigPath(".")
+// 	err := viper.ReadInConfig()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	var webstack Webstack
+// 	err = viper.Unmarshal(&webstack)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return webstack.Content.Categories
+// }
+
+// 使用LoadOrStoreJSON直接从缓存中读取数据
+func getCategoriesFromCacheOrConfig(wsURL string) Categories {
+	var cate Categories
+
+	err := wf.Cache.LoadOrStoreJSON("categories", 20*time.Minute, func() (interface{}, error) {
+		return getCategoriesFromConfigURL(wsURL), nil
+	}, &cate)
 	if err != nil {
 		panic(err)
 	}
+	return cate
+}
+
+// 直接从url中获取categories
+func getCategoriesFromConfigURL(wsURL string) Categories {
+	resp, err := http.Get(wsURL)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
 	var webstack Webstack
-	err = viper.Unmarshal(&webstack)
+	err = yaml.NewDecoder(resp.Body).Decode(&webstack)
 	if err != nil {
 		panic(err)
 	}
