@@ -1,32 +1,25 @@
-#name: Create Alfred Workflow
-#
-#on:
-#  push:
-#    tags:
-#      - 'v*'
-#
-#jobs:
-#  build:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-##        go: [ '1.19' ]
-#        os: [macos-latest]
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up Go
-#        uses: actions/setup-go@v3
-#        with:
-#          go-version: 'stable'
-#      - name: Build wsaw
-#        run: go build -o wsaw
-#      - name: Build Alfred workflow
-#        id: builder
-#        uses: almibarss/build-alfred-workflow@v1
-#        with:
-#          workflow_dir: .
-#          exclude_patterns: '.git .github .gitignore go.mod go.sum main.go README.md' # 无法反选，只能列举除了wsaw和alfredworkflow以外的所有文件
-#      - name: Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          files: ${{ steps.builder.outputs.workflow_file }}
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'workflow/**'
+jobs:
+  build:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: workflow/webstack.alfredworkflow
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+#          Unexpected input(s) 'upload_url', valid inputs are ['body', 'body_path', 'name', 'tag_name', 'draft', 'prerelease', 'files', 'fail_on_unmatched_files', 'repository', 'token', 'target_commitish', 'discussion_category_name', 'generate_release_notes', 'append_body']
