@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -25,6 +24,11 @@ type Site struct {
 	URL         string
 	Icon        string
 }
+
+const (
+	CategoryKey = "categories"
+	Md5Key      = "md5"
+)
 
 // Workflow is the main API
 var wf *aw.Workflow
@@ -67,7 +71,6 @@ func run() {
 
 	if len(args) == 2 {
 		se := args[1]
-		log.Println("se: ", se)
 		res = matchSeAndSites(fi, se, cate)
 	} else {
 		// 如果names不为空，则说明匹配到了分类
@@ -88,7 +91,7 @@ func getCategoriesFromCacheOrConfig(url string) []Categories {
 
 	// 判断网页是否修改，如果未修改，则直接读取
 	if !determineContentIsModified(url) {
-		err := wf.Cache.LoadJSON("categories", &older)
+		err := wf.Cache.LoadJSON(CategoryKey, &older)
 		if err != nil {
 			panic(err)
 		}
@@ -96,7 +99,7 @@ func getCategoriesFromCacheOrConfig(url string) []Categories {
 	}
 	// 如果网页修改，则重新获取
 	newer := getCategoriesFromConfigURL(url)
-	err := wf.Cache.StoreJSON("categories", newer)
+	err := wf.Cache.StoreJSON(CategoryKey, newer)
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +139,7 @@ func getCategoriesFromConfigURL(url string) (cate []Categories) {
 func determineContentIsModified(url string) bool {
 	var oldMD5 []byte
 	// 从缓存中读取旧的md5值（如果没有则重新获取）
-	err := wf.Cache.LoadOrStoreJSON("md5", 0*time.Minute, func() (interface{}, error) {
+	err := wf.Cache.LoadOrStoreJSON(Md5Key, 0*time.Minute, func() (interface{}, error) {
 		return getMD5FromURL(url), nil
 	}, &oldMD5)
 	if err != nil {
@@ -145,7 +148,7 @@ func determineContentIsModified(url string) bool {
 	// 新旧md5不同，说明网页修改，则重新获取
 	newMD5 := getMD5FromURL(url)
 	if !bytes.Equal(oldMD5, newMD5) {
-		err := wf.Cache.Store("md5", newMD5)
+		err := wf.Cache.Store(Md5Key, newMD5)
 		if err != nil {
 			panic(err)
 		}
