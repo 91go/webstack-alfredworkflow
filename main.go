@@ -49,7 +49,7 @@ func main() {
 func run() {
 	var err error
 	args := wf.Args()
-	if len(args) == 0 || len(args) > 2 {
+	if len(args) > 2 {
 		return
 	}
 	defer func() {
@@ -59,23 +59,27 @@ func run() {
 		}
 	}()
 
-	fi := args[0]
-
-	url, b := wf.Alfred.Env.Lookup(EnvURL)
+	envURL, b := wf.Alfred.Env.Lookup(EnvURL)
 	if !b {
 		return
 	}
 
-	cate := getCategoriesFromCacheOrConfig(url)
-	allSites := extractAllSitesFromCategories(cate)
-	cateNames := extractNameFromCategories(cate)
-	names := matchFiAndCategoryNames(fi, cateNames)
 	var res []Site
 
-	if len(args) == 2 {
+	cate := getCategoriesFromCacheOrConfig(envURL)
+	allSites := extractAllSitesFromCategories(cate)
+	cateNames := extractNameFromCategories(cate)
+
+	switch len(args) {
+	case 0:
+		res = allSites
+	case 2:
 		se := args[1]
+		fi := args[0]
 		res = matchSeAndSites(fi, se, cate)
-	} else {
+	default:
+		fi := args[0]
+		names := matchFiAndCategoryNames(fi, cateNames)
 		// 如果names不为空，则说明匹配到了分类
 		if len(names) > 0 {
 			res = extractSitesFromCategory(fi, cate)
@@ -84,6 +88,7 @@ func run() {
 			res = matchFiAndSites(fi, allSites)
 		}
 	}
+
 	generateItemsFromSites(res)
 	wf.SendFeedback()
 }
