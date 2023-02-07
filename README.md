@@ -8,22 +8,32 @@ wsaw = Open Webstack's website By Alfred's Workflow
 ## Installation
 
 - 在 [Releases](https://github.com/91go/wsaw/releases) 页面下载workflow文件
-- 在该workflow的环境变量中添加webstack的配置文件 (e.g. `url`->`https://raw.githubusercontent.com/hapihacking/webstack/gh-pages/config.yml`)
+- 在该workflow的环境变量中添加webstack的url (e.g. `url`->`https://ws.wrss.top/`)
 
-    
+
 ## Usage/Examples
 
-> 搜索“分类”
+> 所有网站 `ws`
 
-![kw-c](https://user-images.githubusercontent.com/8591495/216636569-45eefc97-a9f5-4f91-9a9f-9f471eb33849.gif)
+![kw](https://user-images.githubusercontent.com/8591495/217186251-b1ff1059-6e09-41dc-bdb7-132fbe760e5f.gif)
 
-> 搜索“网站”
 
-![kw-r](https://user-images.githubusercontent.com/8591495/216636538-f21dace3-24d2-454e-b6f5-3c753f7ff2a7.gif)
+> 搜索“分类” `ws <分类名>`
 
-> 搜索“分类”下的“网站”
+![kw-c](https://user-images.githubusercontent.com/8591495/217185976-90ea5563-906a-4cfd-8610-c7344f95a9f1.gif)
 
-![kw-c-r](https://user-images.githubusercontent.com/8591495/216636591-591f3315-79ba-46c5-9bf4-887001c3b689.gif)
+
+
+
+> 搜索“网站” `ws <网站关键字>`
+
+![kw-r](https://user-images.githubusercontent.com/8591495/217186004-be234ce6-0a38-4345-8107-503e7015514c.gif)
+
+
+> 搜索“分类”下的“网站” `ws <分类名> <网站关键字>`
+
+![kw-c-r](https://user-images.githubusercontent.com/8591495/217186030-aebab5e2-ee69-4155-ada0-49397af032f8.gif)
+
 
 
 
@@ -37,8 +47,5 @@ wsaw = Open Webstack's website By Alfred's Workflow
 
 ## FAQ
 
-#### 报错"Failed to connect to raw.githubusercontent.com port 443: Operation timed out"
-
-首先手动访问该`config.yml`页面，以确定是否能够访问。如果不能访问，请检查该workflow的环境变量中的`url`是否正确。如果能够访问，请为该workflow或者整个alfred服务配置代理，以保证该workflow能够访问该`config.yml`页面。
 
 
