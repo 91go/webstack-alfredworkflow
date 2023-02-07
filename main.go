@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -28,6 +30,7 @@ type Site struct {
 const (
 	CategoryKey = "categories"
 	Md5Key      = "md5"
+	EnvURL      = "url"
 )
 
 // Workflow is the main API
@@ -58,7 +61,7 @@ func run() {
 
 	fi := args[0]
 
-	url, b := wf.Alfred.Env.Lookup("url")
+	url, b := wf.Alfred.Env.Lookup(EnvURL)
 	if !b {
 		return
 	}
@@ -91,7 +94,9 @@ func getCategoriesFromCacheOrConfig(url string) []Categories {
 
 	// 判断网页是否修改，如果未修改，则直接读取
 	if !determineContentIsModified(url) {
-		err := wf.Cache.LoadJSON(CategoryKey, &older)
+		err := wf.Cache.LoadOrStoreJSON(CategoryKey, 0*time.Minute, func() (interface{}, error) {
+			return getCategoriesFromConfigURL(url), nil
+		}, &older)
 		if err != nil {
 			panic(err)
 		}
@@ -117,11 +122,12 @@ func getCategoriesFromConfigURL(url string) (cate []Categories) {
 			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
 			siteDes := se.Find(".xe-comment p").Text()
 			icon := se.Find(".xe-user-img img").AttrOr("data-src", "")
+
 			sites = append(sites, Site{
 				Name:        siteName,
 				URL:         siteURL,
 				Description: siteDes,
-				Icon:        icon,
+				Icon:        getLocalIcon(icon, siteURL),
 			})
 		})
 		name := s.Prev().Text()
@@ -240,8 +246,9 @@ func matchSeAndSites(fi, se string, categories []Categories) (sites []Site) {
 // 根据sitesFromCategory生成items，Site和Item相对应，其中Item的Arg为Site的URL，Title为Site的Name，Subtitle为Site的Description
 func generateItemsFromSites(sites []Site) (items []aw.Item) {
 	for _, s := range sites {
+		// 注意使用aw.IconTypeImage，否则无法显示图片
 		wf.NewItem(s.Name).Arg(s.URL).Subtitle(s.Description).
-			Valid(true).Autocomplete(s.Name).Icon(&aw.Icon{Value: s.Icon, Type: aw.IconTypeFileIcon})
+			Valid(true).Autocomplete(s.Name).Icon(&aw.Icon{Value: s.Icon, Type: aw.IconTypeImage})
 	}
 	return
 }
@@ -263,4 +270,42 @@ func DocQuery(resp *http.Response) *query.Document {
 	}
 
 	return doc
+}
+
+// 与本地icon根据siteURL的hostname进行匹配，如果匹配到则直接使用本地path，如果未匹配到则下载icon到本地，再使用本地path
+func getIconHostname(siteURL string) string {
+	u, err := url.Parse(siteURL)
+	if err != nil {
+		return ""
+	}
+	return strings.ReplaceAll(u.Hostname(), ".", "-")
+}
+
+// 下载icon到本地目标地址
+// 本地icon的存储路径为：./icons
+// 本地icon的命名规则为：hostname.png
+func getLocalIcon(iconURL, siteURL string) string {
+	iconName := getIconHostname(siteURL)
+	filepath := wf.CacheDir() + "/icons" + iconName + ".png"
+	// 判断文件是否存在，如果存在则直接返回
+	if _, err := os.Stat(filepath); err == nil {
+		return filepath
+	}
+	// 如果不存在，则下载icon到本地
+	resp, err := http.Get(iconURL)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	// 写入文件
+	f, err := os.Create(filepath)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return ""
+	}
+	return filepath
 }

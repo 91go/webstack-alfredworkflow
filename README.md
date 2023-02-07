@@ -3,6 +3,7 @@
 
 wsaw = Open Webstack's website By Alfred's Workflow
 
+请搭配 [hapihacking/webstack](https://github.com/hapihacking/webstack) 使用
 
 ## Installation
 
