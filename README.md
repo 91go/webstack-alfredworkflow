@@ -8,7 +8,8 @@ wsaw = Open Webstack's website By Alfred's Workflow
 ## Installation
 
 - 在 [Releases](https://github.com/91go/wsaw/releases) 页面下载workflow文件
-- 在该workflow的环境变量中添加webstack的url (e.g. `url`->`https://ws.wrss.top/`)
+- 在该workflow的环境变量中添加webstack的url和expire时间 (e.g. `url` -> `https://ws.wrss.top/` , `expire` -> `12`)
+
 
 
 ## Usage/Examples
