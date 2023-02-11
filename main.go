@@ -35,6 +35,7 @@ const (
 	CategoryKey = "categories"
 	Md5Key      = "md5"
 	EnvURL      = "url"
+	EnvExpire   = "expire"
 )
 
 var (
@@ -65,14 +66,12 @@ func run() {
 		}
 	}()
 
-	envURL, b := wf.Alfred.Env.Lookup(EnvURL)
-	if !b {
-		return
-	}
+	siteURL := wf.Config.GetString(EnvURL, "https://ws.wrss.top/")
+	expire := wf.Config.GetInt(EnvExpire, 12)
 
 	res := make([]Site, 0)
 	cates := make(Categories, 0)
-	cates.getCategoriesFromCacheOrConfig(envURL)
+	cates.getCategoriesFromCacheOrConfig(siteURL, expire)
 
 	switch len(args) {
 	case 0:
@@ -98,25 +97,33 @@ func run() {
 }
 
 // 使用LoadOrStoreJSON直接从缓存中读取数据
-func (categories *Categories) getCategoriesFromCacheOrConfig(url string) {
-	// 判断网页是否修改，如果未修改，则直接读取
-	isModified := determineContentIsModified(url)
-	if !isModified {
-		err := wf.Cache.LoadOrStoreJSON(CategoryKey, 0*time.Minute, func() (interface{}, error) {
-			return categories.getCategoriesFromConfigURL(url), nil
-		}, &categories)
-		if err != nil {
-			panic(err)
-		}
-		return
-	}
-	// 如果网页修改，则重新获取
-	newer := categories.getCategoriesFromConfigURL(url)
-	err := wf.Cache.StoreJSON(CategoryKey, newer)
+func (categories *Categories) getCategoriesFromCacheOrConfig(url string, expire int) {
+	// 默认直接从缓存中读取
+	err := wf.Cache.LoadOrStoreJSON(CategoryKey, time.Duration(expire)*time.Hour, func() (interface{}, error) {
+		return categories.getCategoriesFromConfigURL(url), nil
+	}, &categories)
+
 	if err != nil {
 		panic(err)
 	}
-	categories = &newer
+	// 判断网页是否修改，如果未修改，则直接读取
+	// isModified := determineContentIsModified(url)
+	// if !isModified {
+	// 	err := wf.Cache.LoadOrStoreJSON(CategoryKey, 0*time.Minute, func() (interface{}, error) {
+	// 		return categories.getCategoriesFromConfigURL(url), nil
+	// 	}, &categories)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	return
+	// }
+	// // 如果网页修改，则重新获取
+	// newer := categories.getCategoriesFromConfigURL(url)
+	// err := wf.Cache.StoreJSON(CategoryKey, newer)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// categories = &newer
 }
 
 // 直接从url中获取categories
