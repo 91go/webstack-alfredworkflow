@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
+	"wsaw/fc"
 
 	query "github.com/PuerkitoBio/goquery"
 	aw "github.com/deanishe/awgo"
@@ -33,8 +35,10 @@ const (
 	EnvURL      = "url"
 )
 
-// Workflow is the main API
-var wf *aw.Workflow
+var (
+	wf *aw.Workflow
+	wg sync.WaitGroup
+)
 
 func init() {
 	wf = aw.New()
@@ -118,29 +122,38 @@ func getCategoriesFromCacheOrConfig(url string) []Categories {
 
 // 直接从url中获取categories
 func getCategoriesFromConfigURL(url string) (cate []Categories) {
-	doc := FetchHTML(url)
+	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var sites []Site
+			wg2 := sync.WaitGroup{}
+			s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
+				wg2.Add(1)
+				go func() {
+					defer wg2.Done()
+					siteName := se.Find(".xe-comment a strong").Text()
+					siteURL, _ := se.Find(".label-info").Attr("data-original-title")
+					siteDes := se.Find(".xe-comment p").Text()
+					iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
 
-	doc.Find(".row").Each(func(i int, s *query.Selection) {
-		var sites []Site
-		s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
-			siteName := se.Find(".xe-comment a strong").Text()
-			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
-			siteDes := se.Find(".xe-comment p").Text()
-			icon := se.Find(".xe-user-img img").AttrOr("data-src", "")
-
-			sites = append(sites, Site{
-				Name:        siteName,
-				URL:         siteURL,
-				Description: siteDes,
-				Icon:        getLocalIcon(icon, siteURL),
+					sites = append(sites, Site{
+						Name:        siteName,
+						URL:         siteURL,
+						Description: siteDes,
+						Icon:        getLocalIcon(iconURL, siteURL),
+					})
+				}()
 			})
-		})
-		name := s.Prev().Text()
-		cate = append(cate, Categories{
-			Name:  name,
-			Sites: sites,
-		})
+			wg2.Wait()
+			name := s.Prev().Text()
+			cate = append(cate, Categories{
+				Name:  name,
+				Sites: sites,
+			})
+		}()
 	})
+	wg.Wait()
 	return cate
 }
 
@@ -200,6 +213,16 @@ func extractAllSitesFromCategories(categories []Categories) (sites []Site) {
 	return sites
 }
 
+// 根据cate的名称，提取某个cate下的所有sites
+func extractSitesFromCategory(cate string, categories []Categories) (sites []Site) {
+	for _, v := range categories {
+		if v.Name == cate {
+			sites = v.Sites
+		}
+	}
+	return
+}
+
 // 优先匹配cate，如果匹配到就直接展示该cate下的所有site
 func matchFiAndCategoryNames(fi string, categoryNames []string) []string {
 	var matchFi []string
@@ -209,16 +232,6 @@ func matchFiAndCategoryNames(fi string, categoryNames []string) []string {
 		}
 	}
 	return matchFi
-}
-
-// 根据cate的名称，提取某个cate下的所有sites
-func extractSitesFromCategory(cate string, categories []Categories) (sites []Site) {
-	for _, v := range categories {
-		if v.Name == cate {
-			sites = v.Sites
-		}
-	}
-	return
 }
 
 // 如果匹配不到，则全局搜索所有的site
@@ -258,25 +271,6 @@ func generateItemsFromSites(sites []Site) (items []aw.Item) {
 	return
 }
 
-func FetchHTML(url string) *query.Document {
-	resp, err := http.Get(url)
-	if err != nil {
-		return &query.Document{}
-	}
-	defer resp.Body.Close()
-	return DocQuery(resp)
-}
-
-// 请求goquery
-func DocQuery(resp *http.Response) *query.Document {
-	doc, err := query.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return &query.Document{}
-	}
-
-	return doc
-}
-
 // 与本地icon根据siteURL的hostname进行匹配，如果匹配到则直接使用本地path，如果未匹配到则下载icon到本地，再使用本地path
 func getIconHostname(siteURL string) string {
 	u, err := url.Parse(siteURL)
@@ -291,7 +285,7 @@ func getIconHostname(siteURL string) string {
 // 本地icon的命名规则为：hostname.png
 func getLocalIcon(iconURL, siteURL string) string {
 	iconName := getIconHostname(siteURL)
-	filepath := wf.CacheDir() + "/icons" + iconName + ".png"
+	filepath := wf.CacheDir() + "/icons-" + iconName + ".png"
 	// 判断文件是否存在，如果存在则直接返回
 	if _, err := os.Stat(filepath); err == nil {
 		return filepath
