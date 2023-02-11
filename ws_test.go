@@ -75,7 +75,7 @@ func deleteFiles(dir string) error {
 	return nil
 }
 
-func getCategoriesFromConfigURLWg(url string) (cate []Categories) {
+func getCategoriesFromConfigURLWg(url string) (cate []Category) {
 	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
 		wg.Add(1)
 		go func() {
@@ -101,7 +101,7 @@ func getCategoriesFromConfigURLWg(url string) (cate []Categories) {
 			})
 			wg2.Wait()
 			name := s.Prev().Text()
-			cate = append(cate, Categories{
+			cate = append(cate, Category{
 				Name:  name,
 				Sites: sites,
 			})
@@ -111,7 +111,7 @@ func getCategoriesFromConfigURLWg(url string) (cate []Categories) {
 	return cate
 }
 
-func getCategoriesFromConfigURLNormal(url string) (cate []Categories) {
+func getCategoriesFromConfigURLNormal(url string) (cate []Category) {
 	doc := fc.FetchHTML(url)
 
 	doc.Find(".row").Each(func(i int, s *query.Selection) {
@@ -129,7 +129,7 @@ func getCategoriesFromConfigURLNormal(url string) (cate []Categories) {
 				Icon:        getLocalIcon(icon, siteURL),
 			})
 			name := s.Prev().Text()
-			cate = append(cate, Categories{
+			cate = append(cate, Category{
 				Name:  name,
 				Sites: sites,
 			})
