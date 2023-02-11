@@ -77,7 +77,7 @@ func run() {
 		se := args[1]
 		fi := args[0]
 		res = matchSeAndSites(fi, se, cate)
-	default:
+	case 3:
 		fi := args[0]
 		names := matchFiAndCategoryNames(fi, cateNames)
 		// 如果names不为空，则说明匹配到了分类
