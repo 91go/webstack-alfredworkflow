@@ -1,9 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"crypto/md5"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -32,8 +29,7 @@ type Site struct {
 }
 
 const (
-	CategoryKey = "categories"
-	Md5Key      = "md5"
+	CategoryKey = "categories.json"
 	EnvURL      = "url"
 	EnvExpire   = "expire"
 )
@@ -102,7 +98,6 @@ func (categories *Categories) getCategoriesFromCacheOrConfig(url string, expire 
 	err := wf.Cache.LoadOrStoreJSON(CategoryKey, time.Duration(expire)*time.Hour, func() (interface{}, error) {
 		return categories.getCategoriesFromConfigURL(url), nil
 	}, &categories)
-
 	if err != nil {
 		panic(err)
 	}
@@ -163,65 +158,26 @@ func (categories *Categories) getCategoriesFromConfigURL(url string) Categories 
 	return *categories
 }
 
-// 判断网页是否修改，通过MD5值判断
-// true: 已修改
-// false: 未修改
-func determineContentIsModified(url string) bool {
-	var oldMD5 []byte
-	// 从缓存中读取旧的md5值（如果没有则重新获取）
-	err := wf.Cache.LoadOrStoreJSON(Md5Key, 0*time.Minute, func() (interface{}, error) {
-		return getMD5FromURL(url), nil
-	}, &oldMD5)
-	if err != nil {
-		return false
-	}
-	// 新旧md5不同，说明网页修改，则重新获取
-	newMD5 := getMD5FromURL(url)
-	if !bytes.Equal(oldMD5, newMD5) {
-		err := wf.Cache.Store(Md5Key, newMD5)
-		if err != nil {
-			panic(err)
-		}
-		return true
-	}
-
-	return false
-}
-
-// 从url中获取MD5值
-func getMD5FromURL(url string) []byte {
-	resp, err := http.Get(url)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	return []byte(fmt.Sprintf("%x", md5.Sum(body)))
-}
-
 // 提取categories中的name
-func (categories Categories) extractNameFromCategories() []string {
+func (categories *Categories) extractNameFromCategories() []string {
 	var categoryNames []string
-	for _, v := range categories {
+	for _, v := range *categories {
 		categoryNames = append(categoryNames, v.Name)
 	}
 	return categoryNames
 }
 
 // 提取categories中的所有sites
-func (categories Categories) extractAllSitesFromCategories() (sites []Site) {
-	for _, v := range categories {
+func (categories *Categories) extractAllSitesFromCategories() (sites []Site) {
+	for _, v := range *categories {
 		sites = append(sites, v.Sites...)
 	}
 	return sites
 }
 
 // 根据cate的名称，提取某个cate下的所有sites
-func (categories Categories) extractSitesFromCategory(cate string) (sites []Site) {
-	for _, v := range categories {
+func (categories *Categories) extractSitesFromCategory(cate string) (sites []Site) {
+	for _, v := range *categories {
 		if v.Name == cate {
 			sites = v.Sites
 		}
@@ -230,7 +186,7 @@ func (categories Categories) extractSitesFromCategory(cate string) (sites []Site
 }
 
 // 优先匹配cate，如果匹配到就直接展示该cate下的所有site
-func (categories Categories) matchFiAndCategoryNames(fi string) []string {
+func (categories *Categories) matchFiAndCategoryNames(fi string) []string {
 	var matchFi []string
 	for _, v := range categories.extractNameFromCategories() {
 		if v == fi {
@@ -242,7 +198,7 @@ func (categories Categories) matchFiAndCategoryNames(fi string) []string {
 
 // 如果匹配不到，则全局搜索所有的site
 // 将fi和Sites中的Site中的Name和Url进行匹配，如果能匹配到，组装为[]Sites，，最终将数据转为json格式，如果没有则为空json
-func (categories Categories) matchFiAndSites(fi string) (sites []Site) {
+func (categories *Categories) matchFiAndSites(fi string) (sites []Site) {
 	for _, s := range categories.extractAllSitesFromCategories() {
 		if strings.Contains(strings.ToLower(s.Name), strings.ToLower(fi)) || strings.Contains(strings.ToLower(s.URL), strings.ToLower(fi)) {
 			sites = append(sites, s)
@@ -253,8 +209,8 @@ func (categories Categories) matchFiAndSites(fi string) (sites []Site) {
 
 // kw <directory-name> <url-name>... 首字母搜索，只在该分类下搜索
 // 先对fi与Categories的Name进行匹配，然后对其下的Sites的name和URL与se进行匹配
-func (categories Categories) matchSeAndSites(fi, se string) (sites []Site) {
-	for _, category := range categories {
+func (categories *Categories) matchSeAndSites(fi, se string) (sites []Site) {
+	for _, category := range *categories {
 		if category.Name == fi {
 			for _, s := range category.Sites {
 				if strings.Contains(strings.ToLower(s.Name), strings.ToLower(se)) || strings.Contains(strings.ToLower(s.URL), strings.ToLower(se)) {
@@ -301,16 +257,70 @@ func getLocalIcon(iconURL, siteURL string) string {
 	if err != nil {
 		return ""
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(resp.Body)
 	// 写入文件
 	f, err := os.Create(filepath)
 	if err != nil {
 		return ""
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(f)
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
 		return ""
 	}
 	return filepath
 }
+
+// 从url中获取MD5值
+//func getMD5FromURL(url string) []byte {
+//	resp, err := http.Get(url)
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer func(Body io.ReadCloser) {
+//		err := Body.Close()
+//		if err != nil {
+//
+//		}
+//	}(resp.Body)
+//	body, err := io.ReadAll(resp.Body)
+//	if err != nil {
+//		panic(err)
+//	}
+//	return []byte(fmt.Sprintf("%x", md5.Sum(body)))
+//}
+
+// 判断网页是否修改，通过MD5值判断
+// true: 已修改
+// false: 未修改
+//func determineContentIsModified(url string) bool {
+//	var oldMD5 []byte
+//	// 从缓存中读取旧的md5值（如果没有则重新获取）
+//	err := wf.Cache.LoadOrStoreJSON(Md5Key, 0*time.Minute, func() (interface{}, error) {
+//		return getMD5FromURL(url), nil
+//	}, &oldMD5)
+//	if err != nil {
+//		return false
+//	}
+//	// 新旧md5不同，说明网页修改，则重新获取
+//	newMD5 := getMD5FromURL(url)
+//	if !bytes.Equal(oldMD5, newMD5) {
+//		err := wf.Cache.Store(Md5Key, newMD5)
+//		if err != nil {
+//			panic(err)
+//		}
+//		return true
+//	}
+//
+//	return false
+//}
