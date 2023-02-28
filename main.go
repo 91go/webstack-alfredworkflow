@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 	"wsaw/fc"
 
@@ -34,10 +33,7 @@ const (
 	EnvExpire   = "expire"
 )
 
-var (
-	wf *aw.Workflow
-	wg sync.WaitGroup
-)
+var wf *aw.Workflow
 
 func init() {
 	wf = aw.New()
@@ -124,37 +120,26 @@ func (categories *Categories) getCategoriesFromCacheOrConfig(url string, expire 
 // 直接从url中获取categories
 func (categories *Categories) getCategoriesFromConfigURL(url string) Categories {
 	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			var sites []Site
-			wg2 := sync.WaitGroup{}
-			s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
-				wg2.Add(1)
-				go func() {
-					defer wg2.Done()
-					siteName := se.Find(".xe-comment a strong").Text()
-					siteURL, _ := se.Find(".label-info").Attr("data-original-title")
-					siteDes := se.Find(".xe-comment p").Text()
-					iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
+		var sites []Site
+		s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
+			siteName := se.Find(".xe-comment a strong").Text()
+			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
+			siteDes := se.Find(".xe-comment p").Text()
+			iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
 
-					sites = append(sites, Site{
-						Name:        siteName,
-						URL:         siteURL,
-						Description: siteDes,
-						Icon:        getLocalIcon(iconURL, siteURL),
-					})
-				}()
+			sites = append(sites, Site{
+				Name:        siteName,
+				URL:         siteURL,
+				Description: siteDes,
+				Icon:        getLocalIcon(iconURL, siteURL),
 			})
-			wg2.Wait()
-			name := s.Prev().Text()
-			*categories = append(*categories, Category{
-				Name:  name,
-				Sites: sites,
-			})
-		}()
+		})
+		name := s.Prev().Text()
+		*categories = append(*categories, Category{
+			Name:  name,
+			Sites: sites,
+		})
 	})
-	wg.Wait()
 	return *categories
 }
 

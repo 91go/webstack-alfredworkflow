@@ -6,6 +6,9 @@ on:
       - 'v*'
     paths:
       - 'workflow/**'
+  pull_request:
+    paths:
+      - 'workflow/**'
 jobs:
   build:
     name: Upload Release Asset

@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"sync"
 	"testing"
 	"wsaw/fc"
 
@@ -20,23 +19,23 @@ import (
 
 // BenchmarkGetCategoriesDataWg-8   	       4	 304744851 ns/op	   0.00 MB/s	 8889888 B/op	   35965 allocs/op
 // BenchmarkGetCategoriesData-8     	       1	9516506947 ns/op	   0.00 MB/s	 8442184 B/op	   32940 allocs/op
-func BenchmarkGetCategoriesDataWg(b *testing.B) {
-	url := "https://ws.wrss.top/"
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		// 用b.SetBytes判断GC被触发频率
-		b.SetBytes(111)
-		// 输出信息会有B/op和allocs/op
-		b.ReportAllocs()
-		getCategoriesFromConfigURLWg(url)
-		// 删除文件，路径为~/documents/pwgen/cache/categories和md5
-		dir := "/Users/lhgtqb7bll/documents/pwgen/cache"
-		err := deleteFiles(dir)
-		if err != nil {
-			print(err.Error())
-		}
-	}
-}
+//func BenchmarkGetCategoriesDataWg(b *testing.B) {
+//	url := "https://ws.wrss.top/"
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		// 用b.SetBytes判断GC被触发频率
+//		b.SetBytes(111)
+//		// 输出信息会有B/op和allocs/op
+//		b.ReportAllocs()
+//		getCategoriesFromConfigURLWg(url)
+//		// 删除文件，路径为~/documents/pwgen/cache/categories和md5
+//		dir := "/Users/lhgtqb7bll/documents/pwgen/cache"
+//		err := deleteFiles(dir)
+//		if err != nil {
+//			print(err.Error())
+//		}
+//	}
+//}
 
 func BenchmarkGetCategoriesData(b *testing.B) {
 	url := "https://ws.wrss.top/"
@@ -75,41 +74,41 @@ func deleteFiles(dir string) error {
 	return nil
 }
 
-func getCategoriesFromConfigURLWg(url string) (cate []Category) {
-	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			var sites []Site
-			wg2 := sync.WaitGroup{}
-			s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
-				wg2.Add(1)
-				go func() {
-					defer wg2.Done()
-					siteName := se.Find(".xe-comment a strong").Text()
-					siteURL, _ := se.Find(".label-info").Attr("data-original-title")
-					siteDes := se.Find(".xe-comment p").Text()
-					iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
-
-					sites = append(sites, Site{
-						Name:        siteName,
-						URL:         siteURL,
-						Description: siteDes,
-						Icon:        getLocalIcon(iconURL, siteURL),
-					})
-				}()
-			})
-			wg2.Wait()
-			name := s.Prev().Text()
-			cate = append(cate, Category{
-				Name:  name,
-				Sites: sites,
-			})
-		}()
-	})
-	wg.Wait()
-	return cate
-}
+//func getCategoriesFromConfigURLWg(url string) (cate []Category) {
+//	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
+//		wg.Add(1)
+//		go func() {
+//			defer wg.Done()
+//			var sites []Site
+//			wg2 := sync.WaitGroup{}
+//			s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
+//				wg2.Add(1)
+//				go func() {
+//					defer wg2.Done()
+//					siteName := se.Find(".xe-comment a strong").Text()
+//					siteURL, _ := se.Find(".label-info").Attr("data-original-title")
+//					siteDes := se.Find(".xe-comment p").Text()
+//					iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
+//
+//					sites = append(sites, Site{
+//						Name:        siteName,
+//						URL:         siteURL,
+//						Description: siteDes,
+//						Icon:        getLocalIcon(iconURL, siteURL),
+//					})
+//				}()
+//			})
+//			wg2.Wait()
+//			name := s.Prev().Text()
+//			cate = append(cate, Category{
+//				Name:  name,
+//				Sites: sites,
+//			})
+//		}()
+//	})
+//	wg.Wait()
+//	return cate
+//}
 
 func getCategoriesFromConfigURLNormal(url string) (cate []Category) {
 	doc := fc.FetchHTML(url)
