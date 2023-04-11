@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 	"wsaw/fc"
 
@@ -33,7 +34,10 @@ const (
 	EnvExpire   = "expire"
 )
 
-var wf *aw.Workflow
+var (
+	wf *aw.Workflow
+	wg sync.WaitGroup
+)
 
 func init() {
 	wf = aw.New()
@@ -127,11 +131,14 @@ func (categories *Categories) getCategoriesFromConfigURL(url string) Categories 
 			siteDes := se.Find(".xe-comment p").Text()
 			iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
 
+			wg.Add(1)
+			go saveIcon(iconURL, siteURL)
+
 			sites = append(sites, Site{
 				Name:        siteName,
 				URL:         siteURL,
 				Description: siteDes,
-				Icon:        getLocalIcon(iconURL, siteURL),
+				Icon:        getLocalIconPath(siteURL),
 			})
 		})
 		name := s.Prev().Text()
@@ -139,6 +146,7 @@ func (categories *Categories) getCategoriesFromConfigURL(url string) Categories 
 			Name:  name,
 			Sites: sites,
 		})
+		wg.Wait()
 	})
 	return *categories
 }
@@ -227,20 +235,16 @@ func getIconHostname(siteURL string) string {
 	return strings.ReplaceAll(u.Hostname(), ".", "-")
 }
 
-// 下载icon到本地目标地址
-// 本地icon的存储路径为：./icons
-// 本地icon的命名规则为：hostname.png
-func getLocalIcon(iconURL, siteURL string) string {
-	iconName := getIconHostname(siteURL)
-	filepath := wf.CacheDir() + "/icons-" + iconName + ".png"
-	// 判断文件是否存在，如果存在则直接返回
-	if _, err := os.Stat(filepath); err == nil {
-		return filepath
+func saveIcon(iconURL, siteURL string) bool {
+	defer wg.Done()
+	filepath := getLocalIconPath(siteURL)
+	if exist(filepath) {
+		return true
 	}
 	// 如果不存在，则下载icon到本地
 	resp, err := http.Get(iconURL)
 	if err != nil {
-		return ""
+		return false
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -251,7 +255,7 @@ func getLocalIcon(iconURL, siteURL string) string {
 	// 写入文件
 	f, err := os.Create(filepath)
 	if err != nil {
-		return ""
+		return false
 	}
 	defer func(f *os.File) {
 		err := f.Close()
@@ -260,10 +264,22 @@ func getLocalIcon(iconURL, siteURL string) string {
 		}
 	}(f)
 	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		return ""
-	}
+	return err == nil
+}
+
+// 下载icon到本地目标地址
+// 本地icon的存储路径为：./icons
+// 本地icon的命名规则为：hostname.png
+func getLocalIconPath(siteURL string) string {
+	iconName := getIconHostname(siteURL)
+	filepath := wf.CacheDir() + "/icons-" + iconName + ".png"
+
 	return filepath
+}
+
+func exist(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil || os.IsExist(err)
 }
 
 // 从url中获取MD5值
