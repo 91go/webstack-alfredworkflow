@@ -1,13 +1,5 @@
 package main
 
-import (
-	"os"
-	"testing"
-	"wsaw/fc"
-
-	query "github.com/PuerkitoBio/goquery"
-)
-
 // BenchmarkGetCategoriesDataWg-8   	       1	1824024404 ns/op	   0.00 MB/s	31176160 B/op	  308578 allocs/op
 // BenchmarkGetCategoriesData-8     	       1	9798359362 ns/op	   0.00 MB/s	 9239320 B/op	   43095 allocs/op
 
@@ -37,42 +29,42 @@ import (
 //	}
 //}
 
-func BenchmarkGetCategoriesData(b *testing.B) {
-	url := "https://ws.wrss.top/"
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		// 用b.SetBytes判断GC被触发频率
-		b.SetBytes(111)
-		// 输出信息会有B/op和allocs/op
-		b.ReportAllocs()
-		getCategoriesFromConfigURLNormal(url)
-		// 删除文件，路径为~/documents/pwgen/cache/categories和md5
-		dir := "/Users/lhgtqb7bll/documents/pwgen/cache"
-		err := deleteFiles(dir)
-		if err != nil {
-			print(err.Error())
-		}
-	}
-}
-
-func deleteFiles(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(dir + "/" + name)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//func BenchmarkGetCategoriesData(b *testing.B) {
+//	url := "https://ws.wrss.top/"
+//	b.ResetTimer()
+//	for i := 0; i < b.N; i++ {
+//		// 用b.SetBytes判断GC被触发频率
+//		b.SetBytes(111)
+//		// 输出信息会有B/op和allocs/op
+//		b.ReportAllocs()
+//		getCategoriesFromConfigURLNormal(url)
+//		// 删除文件，路径为~/documents/pwgen/cache/categories和md5
+//		dir := "/Users/lhgtqb7bll/documents/pwgen/cache"
+//		err := deleteFiles(dir)
+//		if err != nil {
+//			print(err.Error())
+//		}
+//	}
+//}
+//
+//func deleteFiles(dir string) error {
+//	d, err := os.Open(dir)
+//	if err != nil {
+//		return err
+//	}
+//	defer d.Close()
+//	names, err := d.Readdirnames(-1)
+//	if err != nil {
+//		return err
+//	}
+//	for _, name := range names {
+//		err = os.RemoveAll(dir + "/" + name)
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}
 
 //func getCategoriesFromConfigURLWg(url string) (cate []Category) {
 //	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
@@ -110,29 +102,29 @@ func deleteFiles(dir string) error {
 //	return cate
 //}
 
-func getCategoriesFromConfigURLNormal(url string) (cate []Category) {
-	doc := fc.FetchHTML(url)
-
-	doc.Find(".row").Each(func(i int, s *query.Selection) {
-		var sites []Site
-		s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
-			siteName := se.Find(".xe-comment a strong").Text()
-			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
-			siteDes := se.Find(".xe-comment p").Text()
-			icon := se.Find(".xe-user-img img").AttrOr("data-src", "")
-
-			sites = append(sites, Site{
-				Name:        siteName,
-				URL:         siteURL,
-				Description: siteDes,
-				Icon:        getLocalIcon(icon, siteURL),
-			})
-			name := s.Prev().Text()
-			cate = append(cate, Category{
-				Name:  name,
-				Sites: sites,
-			})
-		})
-	})
-	return cate
-}
+//func getCategoriesFromConfigURLNormal(url string) (cate []Category) {
+//	doc := fc.FetchHTML(url)
+//
+//	doc.Find(".row").Each(func(i int, s *query.Selection) {
+//		var sites []Site
+//		s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
+//			siteName := se.Find(".xe-comment a strong").Text()
+//			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
+//			siteDes := se.Find(".xe-comment p").Text()
+//			icon := se.Find(".xe-user-img img").AttrOr("data-src", "")
+//
+//			sites = append(sites, Site{
+//				Name:        siteName,
+//				URL:         siteURL,
+//				Description: siteDes,
+//				Icon:        getLocalIcon(icon, siteURL),
+//			})
+//			name := s.Prev().Text()
+//			cate = append(cate, Category{
+//				Name:  name,
+//				Sites: sites,
+//			})
+//		})
+//	})
+//	return cate
+//}
