@@ -241,8 +241,9 @@ func saveIcon(iconURL, siteURL string) bool {
 	if exist(filepath) {
 		return true
 	}
+
 	// 如果不存在，则下载icon到本地
-	resp, err := http.Get(iconURL)
+	resp, err := http.Get(replaceIconURL(iconURL, siteURL))
 	if err != nil {
 		return false
 	}
@@ -265,6 +266,14 @@ func saveIcon(iconURL, siteURL string) bool {
 	}(f)
 	_, err = io.Copy(f, resp.Body)
 	return err == nil
+}
+
+// 无法直接拉取start.me，替换服务
+func replaceIconURL(iconURL, siteURL string) string {
+	if strings.Contains(iconURL, "f.start.me") {
+		return "https://favicon.splitbee.io/?url=" + siteURL
+	}
+	return iconURL
 }
 
 // 下载icon到本地目标地址
