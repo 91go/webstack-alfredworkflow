@@ -62,7 +62,7 @@ func run() {
 		}
 	}()
 
-	siteURL := wf.Config.GetString(EnvURL, "https://ws.wrss.top/")
+	siteURL := wf.Config.GetString(EnvURL, "https://blog.wrss.top/webstack")
 	expire := wf.Config.GetInt(EnvExpire, 12)
 
 	res := make([]Site, 0)
@@ -101,6 +101,9 @@ func (categories *Categories) getCategoriesFromCacheOrConfig(url string, expire 
 	if err != nil {
 		panic(err)
 	}
+
+	// categories.getCategoriesFromConfigURL(url)
+
 	// 判断网页是否修改，如果未修改，则直接读取
 	// isModified := determineContentIsModified(url)
 	// if !isModified {
@@ -123,30 +126,32 @@ func (categories *Categories) getCategoriesFromCacheOrConfig(url string, expire 
 
 // 直接从url中获取categories
 func (categories *Categories) getCategoriesFromConfigURL(url string) Categories {
-	fc.FetchHTML(url).Find(".row").Each(func(i int, s *query.Selection) {
+	fc.FetchHTML(url).Find(".cateHeader_ZwO3").Parent().Each(func(i int, s *query.Selection) {
 		var sites []Site
-		s.Find(".col-sm-3").Each(func(i int, se *query.Selection) {
-			siteName := se.Find(".xe-comment a strong").Text()
-			siteURL, _ := se.Find(".label-info").Attr("data-original-title")
-			siteDes := se.Find(".xe-comment p").Text()
-			iconURL := se.Find(".xe-user-img img").AttrOr("data-src", "")
+		s.Find(".padding-vert--sm").Each(func(i int, se *query.Selection) {
 
-			wg.Add(1)
-			go saveIcon(iconURL, siteURL)
+			siteName := se.Find(".resourceCardTitle_uErX a").Text()
+			siteURL := se.Find(".resourceCardTitle_uErX a").AttrOr("href", "")
+			siteDes := se.Find(".resourceCardDesc_ghG3").Text()
+			// iconURL := se.Find("img").AttrOr("src", "")
+
+			// wg.Add(1)
+			// go saveIcon(iconURL, siteURL)
 
 			sites = append(sites, Site{
 				Name:        siteName,
 				URL:         siteURL,
 				Description: siteDes,
 				Icon:        getLocalIconPath(siteURL),
+				// Icon: iconURL,
 			})
 		})
-		name := s.Prev().Text()
+		name := s.Find(".anchor").Text()
 		*categories = append(*categories, Category{
 			Name:  name,
 			Sites: sites,
 		})
-		wg.Wait()
+		// wg.Wait()
 	})
 	return *categories
 }
@@ -292,7 +297,7 @@ func exist(filename string) bool {
 }
 
 // 从url中获取MD5值
-//func getMD5FromURL(url string) []byte {
+// func getMD5FromURL(url string) []byte {
 //	resp, err := http.Get(url)
 //	if err != nil {
 //		panic(err)
@@ -308,12 +313,12 @@ func exist(filename string) bool {
 //		panic(err)
 //	}
 //	return []byte(fmt.Sprintf("%x", md5.Sum(body)))
-//}
+// }
 
 // 判断网页是否修改，通过MD5值判断
 // true: 已修改
 // false: 未修改
-//func determineContentIsModified(url string) bool {
+// func determineContentIsModified(url string) bool {
 //	var oldMD5 []byte
 //	// 从缓存中读取旧的md5值（如果没有则重新获取）
 //	err := wf.Cache.LoadOrStoreJSON(Md5Key, 0*time.Minute, func() (interface{}, error) {
@@ -333,4 +338,4 @@ func exist(filename string) bool {
 //	}
 //
 //	return false
-//}
+// }

@@ -1,4 +1,3 @@
-
 # wsaw
 
 wsaw = Open Webstack's website By Alfred's Workflow
