@@ -14,6 +14,10 @@ import (
 	aw "github.com/deanishe/awgo"
 )
 
+const (
+	BaseURL = "https://blog.wrss.top/webstack"
+)
+
 type Category struct {
 	Name  string `json:"cateName"`
 	Sites []Site `json:"sites"`
@@ -25,7 +29,8 @@ type Site struct {
 	Name        string
 	Description string `json:"description,omitempty"`
 	URL         string
-	Icon        string
+	IconPath    string
+	IconURL     string
 }
 
 const (
@@ -51,6 +56,7 @@ func main() {
 // kw <url-name>... 直接展示所有标题/及url有该字符的，不管分类，默认忽略大小写
 func run() {
 	var err error
+
 	args := wf.Args()
 	if len(args) > 2 {
 		return
@@ -62,13 +68,17 @@ func run() {
 		}
 	}()
 
-	siteURL := wf.Config.GetString(EnvURL, "https://blog.wrss.top/webstack")
+	siteURL := wf.Config.GetString(EnvURL, BaseURL)
 	expire := wf.Config.GetInt(EnvExpire, 12)
 
 	res := make([]Site, 0)
 	cates := make(Categories, 0)
 	cates.getCategoriesFromCacheOrConfig(siteURL, expire)
 
+	// commandType := args[0]
+	// switch commandType {
+	// // 拉取webstack
+	// case "webstack":
 	switch len(args) {
 	case 0:
 		res = cates.extractAllSitesFromCategories()
@@ -89,6 +99,19 @@ func run() {
 	}
 
 	generateItemsFromSites(res)
+
+	// // 缓存icon
+	// case "cache-favicons":
+	// 	sites := cates.extractAllSitesFromCategories()
+	// 	for _, s := range sites {
+	// 		// wg.Add(1)
+	// 		saveIcon(s.IconURL, s.URL)
+	// 	}
+	// 	// wg.Wait()
+	// 	wf.SendFeedback()
+	// 	return
+	// }
+
 	wf.SendFeedback()
 }
 
@@ -129,21 +152,17 @@ func (categories *Categories) getCategoriesFromConfigURL(url string) Categories 
 	fc.FetchHTML(url).Find(".cateHeader_ZwO3").Parent().Each(func(i int, s *query.Selection) {
 		var sites []Site
 		s.Find(".padding-vert--sm").Each(func(i int, se *query.Selection) {
-
 			siteName := se.Find(".resourceCardTitle_uErX a").Text()
 			siteURL := se.Find(".resourceCardTitle_uErX a").AttrOr("href", "")
 			siteDes := se.Find(".resourceCardDesc_ghG3").Text()
-			// iconURL := se.Find("img").AttrOr("src", "")
-
-			// wg.Add(1)
-			// go saveIcon(iconURL, siteURL)
+			iconURL := se.Find("img").AttrOr("src", "")
 
 			sites = append(sites, Site{
 				Name:        siteName,
 				URL:         siteURL,
 				Description: siteDes,
-				Icon:        getLocalIconPath(siteURL),
-				// Icon: iconURL,
+				IconURL:     checkURL(iconURL),
+				IconPath:    getLocalIconPath(siteURL),
 			})
 		})
 		name := s.Find(".anchor").Text()
@@ -151,9 +170,16 @@ func (categories *Categories) getCategoriesFromConfigURL(url string) Categories 
 			Name:  name,
 			Sites: sites,
 		})
-		// wg.Wait()
 	})
 	return *categories
+}
+
+// 给本地文件拼接url
+func checkURL(url string) string {
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") && strings.Contains(url, ".") {
+		return url
+	}
+	return BaseURL + url
 }
 
 // 提取categories中的name
@@ -226,7 +252,7 @@ func generateItemsFromSites(sites []Site) (items []aw.Item) {
 	for _, s := range sites {
 		// 注意使用aw.IconTypeImage，否则无法显示图片
 		wf.NewItem(s.Name).Arg(s.URL).Subtitle(s.Description).
-			Valid(true).Autocomplete(s.Name).Icon(&aw.Icon{Value: s.Icon, Type: aw.IconTypeImage})
+			Valid(true).Autocomplete(s.Name).Icon(&aw.Icon{Value: s.IconPath, Type: aw.IconTypeImage})
 	}
 	return
 }
@@ -240,15 +266,25 @@ func getIconHostname(siteURL string) string {
 	return strings.ReplaceAll(u.Hostname(), ".", "-")
 }
 
+// 下载icon到本地
 func saveIcon(iconURL, siteURL string) bool {
-	defer wg.Done()
+	// defer wg.Done()
+	// filepath := getLocalIconPath(siteURL)
+	// if exist(filepath) {
+	// 	return true
+	// }
+
+	_ = createFolderIfNotExists(wf.CacheDir() + "/icons/")
+
+	// 移除原文件
 	filepath := getLocalIconPath(siteURL)
 	if exist(filepath) {
-		return true
+		_ = os.Remove(filepath)
 	}
 
 	// 如果不存在，则下载icon到本地
 	resp, err := http.Get(replaceIconURL(iconURL, siteURL))
+	// resp, err := http.Get(iconURL)
 	if err != nil {
 		return false
 	}
@@ -274,9 +310,10 @@ func saveIcon(iconURL, siteURL string) bool {
 }
 
 // 无法直接拉取start.me，替换服务
+// 用 splitbee 替换掉 start.me
 func replaceIconURL(iconURL, siteURL string) string {
 	if strings.Contains(iconURL, "f.start.me") {
-		return "https://favicon.splitbee.io/?url=" + siteURL
+		return "https://fortunate-silver-shark.faviconkit.com/" + siteURL + "/144"
 	}
 	return iconURL
 }
@@ -286,7 +323,7 @@ func replaceIconURL(iconURL, siteURL string) string {
 // 本地icon的命名规则为：hostname.png
 func getLocalIconPath(siteURL string) string {
 	iconName := getIconHostname(siteURL)
-	filepath := wf.CacheDir() + "/icons-" + iconName + ".png"
+	filepath := wf.CacheDir() + "/icons/" + iconName + ".png"
 
 	return filepath
 }
@@ -294,6 +331,14 @@ func getLocalIconPath(siteURL string) string {
 func exist(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil || os.IsExist(err)
+}
+
+func createFolderIfNotExists(folderPath string) error {
+	_, err := os.Stat(folderPath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(folderPath, os.ModePerm)
+	}
+	return err
 }
 
 // 从url中获取MD5值
